@@ -22,4 +22,20 @@ FROM financial_installments fi, financings f
 WHERE fi.financing_id = f.id and f.identifier = 'RA0726956000'
 and EXTRACT(YEAR FROM CAST(fi.expire_on AS DATE)) = 0023;
 
+------------------------------------------------------------------------------------------------------------------------
+query to select installments withuot billets
 
+  select distinct fi.*, items.status from financial_installments fi
+    inner join financings f on f.id  = fi.financing_id 
+    left  join bank_billet_creation_batches_items items on items.financial_installment_id = fi.id
+    where f.cet = 'PRE_FIXADO'
+    and f.status in ('active', 'fraud_cob', 'non_defaulting', 'advanced_billing', 'grace_period', 'fraud_int')
+    and fi.status in ('opened', 'expired')
+    and fi.securitization in ('fidc1','fidc2','fidc4','fidc5','sec1','amazonia_solar','rural','solfacil','caixa_solfacil')
+    and fi.expire_on <= '2023-07-20'
+    and (case
+        when (select count(*) from bank_billet_creation_batches_items items2
+        where  items2.financial_installment_id = fi.id and items2.status = 'done') > 0 then false
+        else true
+        end)
+-----------------------------------------------------------------------------------------------------------------------------------
