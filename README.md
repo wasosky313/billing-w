@@ -35,6 +35,25 @@ query to select installments withuot billets
     and fi.expire_on <= '2023-07-20'
     and (case
         when (select count(*) from bank_billet_creation_batches_items items2
+
+
+
+otra para installments
+select distinct fi.*, items.status from financial_installments fi
+    inner join financings f on f.id  = fi.financing_id
+    left  join bank_billet_creation_batches_items items on items.financial_installment_id = fi.id
+    where f.cet = 'POS_FIXADO'
+    and f.status in ('active', 'fraud_cob', 'non_defaulting', 'advanced_billing', 'grace_period', 'fraud_int')
+    and fi.status in ('opened', 'expired')
+    and fi.securitization in ('fidc1','fidc2','fidc3','fidc4','fidc5','sec1','amazonia_solar','rural','solfacil','caixa_solfacil')
+    and fi.expire_on between '2023-08-08' and '2023-08-23'
+    and (case
+        when (select count(*) from bank_billet_creation_batches_items items2
+        where  items2.financial_installment_id = fi.id and items2.status = 'done') > 0 then false
+        when (select count(*) from payments p2
+        where  p2.financial_installment_id = fi.id and p2.status <> 'canceled') > 0 then false
+        else true
+        end);
         where  items2.financial_installment_id = fi.id and items2.status = 'done') > 0 then false
         else true
         end)
